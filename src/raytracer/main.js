@@ -10,6 +10,10 @@ let scene
 let sphere1
 let sphere2
 
+let red;
+let green;
+let blue;
+
 let fpsCounter
 
 function setup() {
@@ -23,13 +27,14 @@ function setup() {
     createCamera()
     createScene()
 
-    
+    red = createVector(255, 0, 0);
+    green = createVector(0, 255, 0);
+    blue = createVector(0, 0, 255);
 
     fpsCounter = new FPSCounter(10, 25, 20, 15)
 }
 
-function createScene()
-{
+function createScene() {
     scene = createVector(0, 0, 0)
     sphere1 = new RTSphere(scene, createVector(-1, 0, 1.5), 1)
     sphere2 = new RTSphere(scene, createVector(1, 0, 1.5), 1)
@@ -62,10 +67,10 @@ function draw() {
         rtCamera.direction.add(createVector(0, 0.1, 0));
     }
     else if (keyIsDown(72)) {
-        rtCamera.screenDistance -= 0.1 
+        rtCamera.screenDistance -= 0.1
     }
     else if (keyIsDown(78)) {
-        rtCamera.screenDistance += 0.1 
+        rtCamera.screenDistance += 0.1
     }
 
     let screenCenter = p5.Vector.add(rtCamera.position, p5.Vector.mult(rtCamera.direction, rtCamera.screenDistance))
@@ -76,8 +81,8 @@ function draw() {
 
     loadPixels();
 
-    for (let y = 0; y < HEIGHT; y=y+1) {
-        for (let x = 0; x < WIDTH; x=x+1) {
+    for (let y = 0; y < HEIGHT; y = y + 1) {
+        for (let x = 0; x < WIDTH; x = x + 1) {
             let u = x / WIDTH
             let v = y / HEIGHT
 
@@ -89,13 +94,11 @@ function draw() {
             let color = createVector(0, 0, 0)
 
             if (ray.sphereIntersection(sphere1) == true) {
-                //updatePixelAt(x, y, 255, 0, 0)
-                color.add(createVector(255, 0, 0))
+                color.add(red)
             }
 
             if (ray.sphereIntersection(sphere2) == true) {
-                //updatePixelAt(x, y, 0, 255, 0)
-                color.add(createVector(0, 255, 0))
+                color.add(green)
             }
 
             updatePixelAt(x, y, color.x, color.y, color.z)
@@ -159,8 +162,7 @@ function updatePixelAt(x = 0, y = 0, r = 0, g = 0, b = 0, a = 255) {
     }
 }
 
-function map(value, min1, max1, min2, max2)
-{
+function map(value, min1, max1, min2, max2) {
     if (value == nil)
         return 0
     end
@@ -180,6 +182,6 @@ function map(value, min1, max1, min2, max2)
  * @returns A number in the range [min, max]
  * @type Number
  */
-Number.prototype.clamp = function(min, max) {
+Number.prototype.clamp = function (min, max) {
     return Math.min(Math.max(this, min), max);
-  };
+};

@@ -21,7 +21,7 @@ class RTRay {
         let newLength = projectionLength - Math.sqrt(radiusSqr - distanceSqr)
 
         if (newLength < this.length && newLength > 0) {
-            this.length = newLength
+            //this.length = newLength
             return true
         }
 
