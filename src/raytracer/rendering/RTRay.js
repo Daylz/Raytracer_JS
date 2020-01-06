@@ -17,7 +17,6 @@ class RTRay {
         }
 
         // Ray intersects the sphere
-
         // Checking if there is a closer intersection to the camera
         let newLength = projectionLength - Math.sqrt(radiusSqr - distanceSqr)
 
