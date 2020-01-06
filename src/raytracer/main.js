@@ -1,5 +1,5 @@
-let WIDTH = 512;
-let HEIGHT = 512;
+let WIDTH = 256;
+let HEIGHT = 256;
 
 let pixDensity;
 
@@ -7,6 +7,8 @@ let rtCamera;
 
 let sphere1
 let sphere2
+
+let fpsCounter
 
 function setup() {
     frameRate(60);
@@ -18,6 +20,8 @@ function setup() {
 
     sphere1 = new RTSphere(createVector(-1, 0, 1.5), 1)
     sphere2 = new RTSphere(createVector(1, 0, 1.5), 1)
+
+    fpsCounter = new FPSCounter(10, 25, 20, 15)
 }
 
 function draw() {
@@ -76,6 +80,8 @@ function draw() {
     }
 
     updatePixels();
+
+    fpsCounter.show()
 }
 
 /*function keyPressed() {
