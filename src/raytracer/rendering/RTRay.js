@@ -3,6 +3,8 @@ class RTRay {
         this.origin = origin;
         this.direction = direction;
         this.length = length;
+
+        this.closestIntersectPoint
     }
 
     sphereIntersection(sphere) {
@@ -20,7 +22,14 @@ class RTRay {
         // Checking if there is a closer intersection to the camera
         let newLength = projectionLength - Math.sqrt(radiusSqr - distanceSqr)
 
+        
+
         if (newLength < this.length && newLength > 0) {
+            // We find the closest point to the camera on the sphere
+            this.closestIntersectPoint = p5.Vector.mult(this.direction, newLength)
+
+
+            //print(closestIntersectPoint)
             //this.length = newLength
             return true
         }

@@ -1,5 +1,5 @@
-let WIDTH = 512;
-let HEIGHT = 512;
+let WIDTH = 1024;
+let HEIGHT = 1024;
 
 let pixDensity;
 
@@ -7,12 +7,14 @@ let rtCamera;
 
 let scene
 
+let light
 let sphere1
 let sphere2
 
 let red;
 let green;
 let blue;
+let gray;
 
 let fpsCounter
 
@@ -22,25 +24,99 @@ function setup() {
     background(0);
     pixDensity = pixelDensity();
 
-    print(pixDensity)
-
     createCamera()
     createScene()
 
-    red = createVector(255, 0, 0);
-    green = createVector(0, 255, 0);
-    blue = createVector(0, 0, 255);
+    red = createVector(1, 0, 0);
+    green = createVector(0, 1, 0);
+    blue = createVector(0, 0, 1);
+    gray = createVector(1, 1, 1)
 
-    fpsCounter = new FPSCounter(10, 25, 20, 15)
+    background(0)
+
+    if (keyIsDown(65)) {
+        rtCamera.position.add(createVector(-0.1, 0, 0));
+    } else if (keyIsDown(68)) {
+        rtCamera.position.add(createVector(0.1, 0, 0));
+    }
+    else if (keyIsDown(87)) {
+        rtCamera.position.add(createVector(0, 0, 0.1));
+    }
+    else if (keyIsDown(83)) {
+        rtCamera.position.add(createVector(0, 0, -0.1));
+    }
+    else if (keyIsDown(37)) {
+        rtCamera.direction.add(createVector(-0.1, 0, 0));
+    }
+    else if (keyIsDown(38)) {
+        rtCamera.direction.add(createVector(0, -0.1, 0));
+    }
+    else if (keyIsDown(39)) {
+        rtCamera.direction.add(createVector(0.1, 0, 0));
+    }
+    else if (keyIsDown(40)) {
+        rtCamera.direction.add(createVector(0, 0.1, 0));
+    }
+    else if (keyIsDown(72)) {
+        rtCamera.screenDistance -= 0.1
+    }
+    else if (keyIsDown(78)) {
+        rtCamera.screenDistance += 0.1
+    }
+
+    let screenCenter = p5.Vector.add(rtCamera.position, p5.Vector.mult(rtCamera.direction, rtCamera.screenDistance))
+    let leftTop = p5.Vector.add(screenCenter, createVector(-1, 1, 0))
+    let rightTop = p5.Vector.add(screenCenter, createVector(1, 1, 0))
+    let leftBot = p5.Vector.add(screenCenter, createVector(-1, -1, 0))
+    let rightBot = p5.Vector.add(screenCenter, createVector(1, -1, 0))
+
+    loadPixels();
+
+    for (let y = 0; y < HEIGHT; y = y + 1) {
+        for (let x = 0; x < WIDTH; x = x + 1) {
+            let u = x / WIDTH
+            let v = y / HEIGHT
+
+            let pointOnScreen = p5.Vector.add(leftBot, p5.Vector.add(p5.Vector.mult(p5.Vector.sub(rightBot, leftBot), u), p5.Vector.mult(p5.Vector.sub(leftTop, leftBot), v)))
+            let rayDirection = p5.Vector.sub(pointOnScreen, rtCamera.position)
+            rayDirection.normalize()
+            let ray = new RTRay(rtCamera.position, rayDirection, 15)
+
+            let color = createVector(0, 0, 0)
+
+            if (ray.sphereIntersection(sphere1) == true) {
+
+                let lightRayDirection = p5.Vector.sub(light.position, ray.closestIntersectPoint)
+                lightRayDirection.normalize()
+                let lightRayDistance = p5.Vector.dist(light.position, ray.closestIntersectPoint) + 1
+
+
+                let lightRay = new RTRay(ray.closestIntersectPoint, lightRayDirection, lightRayDistance)
+                
+                if (lightRay.sphereIntersection(sphere1) == false)
+                {
+                    //print(lightRayDistance, p5.Vector.mult(green, myMap(lightRayDistance, 0, 10, 0, 255)))
+
+                    color.add(p5.Vector.mult(gray, myMap(lightRayDistance*lightRayDistance*1.7, 0, 100, 255, 0)))
+                }
+            }
+
+            updatePixelAt(x, y, color.x, color.y, color.z)
+        }
+    }
+
+    updatePixels();
+
+    //fpsCounter = new FPSCounter(10, 25, 20, 15)
 }
 
 function createScene() {
     scene = createVector(0, 0, 0)
-    sphere1 = new RTSphere(scene, createVector(-1, 0, 1.5), 1)
-    sphere2 = new RTSphere(scene, createVector(1, 0, 1.5), 1)
+    light = new RTLight(scene, createVector(-5, 0, 0), 2)
+    sphere1 = new RTSphere(scene, createVector(0, 0, 5), 2)
 }
 
-function draw() {
+/*function draw() {
     background(0)
 
     if (keyIsDown(65)) {
@@ -108,7 +184,7 @@ function draw() {
     updatePixels();
 
     fpsCounter.show()
-}
+}*/
 
 /*function keyPressed() {
 
@@ -162,10 +238,11 @@ function updatePixelAt(x = 0, y = 0, r = 0, g = 0, b = 0, a = 255) {
     }
 }
 
-function map(value, min1, max1, min2, max2) {
-    if (value == nil)
+function myMap(value, min1, max1, min2, max2) {
+    if (value == null)
+    {
         return 0
-    end
+    }
 
     let perc = (value - min1) / (max1 - min1)
     return perc * (max2 - min2) + min2
