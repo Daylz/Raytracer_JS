@@ -4,3 +4,5 @@ class RTPlane {
         this.orientation = orientation;
     }
 }
+
+RTPlane.type = "RTPlane"

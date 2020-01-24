@@ -1,11 +1,13 @@
-let WIDTH = 1024;
-let HEIGHT = 1024;
+let WIDTH = 512;
+let HEIGHT = 512;
 
 let pixDensity;
 
 let rtCamera;
 
 let scene
+
+let objects
 
 let light
 let sphere1
@@ -24,6 +26,10 @@ function setup() {
     background(0);
     pixDensity = pixelDensity();
 
+    scene = new RTObject()
+
+    objects = []
+
     createCamera()
     createScene()
 
@@ -34,37 +40,9 @@ function setup() {
 
     background(0)
 
-    if (keyIsDown(65)) {
-        rtCamera.position.add(createVector(-0.1, 0, 0));
-    } else if (keyIsDown(68)) {
-        rtCamera.position.add(createVector(0.1, 0, 0));
-    }
-    else if (keyIsDown(87)) {
-        rtCamera.position.add(createVector(0, 0, 0.1));
-    }
-    else if (keyIsDown(83)) {
-        rtCamera.position.add(createVector(0, 0, -0.1));
-    }
-    else if (keyIsDown(37)) {
-        rtCamera.direction.add(createVector(-0.1, 0, 0));
-    }
-    else if (keyIsDown(38)) {
-        rtCamera.direction.add(createVector(0, -0.1, 0));
-    }
-    else if (keyIsDown(39)) {
-        rtCamera.direction.add(createVector(0.1, 0, 0));
-    }
-    else if (keyIsDown(40)) {
-        rtCamera.direction.add(createVector(0, 0.1, 0));
-    }
-    else if (keyIsDown(72)) {
-        rtCamera.screenDistance -= 0.1
-    }
-    else if (keyIsDown(78)) {
-        rtCamera.screenDistance += 0.1
-    }
+    print("Render - Started")
 
-    let screenCenter = p5.Vector.add(rtCamera.position, p5.Vector.mult(rtCamera.direction, rtCamera.screenDistance))
+    let screenCenter = p5.Vector.add(rtCamera.position, p5.Vector.mult(rtCamera.rotation, rtCamera.screenDistance))
     let leftTop = p5.Vector.add(screenCenter, createVector(-1, 1, 0))
     let rightTop = p5.Vector.add(screenCenter, createVector(1, 1, 0))
     let leftBot = p5.Vector.add(screenCenter, createVector(-1, -1, 0))
@@ -84,20 +62,30 @@ function setup() {
 
             let color = createVector(0, 0, 0)
 
-            if (ray.sphereIntersection(sphere1) == true) {
+            for (i = 0; i < objects.length; i++)
+            {
+                let object = objects[i]
 
-                let lightRayDirection = p5.Vector.sub(light.position, ray.closestIntersectPoint)
-                lightRayDirection.normalize()
-                let lightRayDistance = p5.Vector.dist(light.position, ray.closestIntersectPoint) + 1
-
-
-                let lightRay = new RTRay(ray.closestIntersectPoint, lightRayDirection, lightRayDistance)
-                
-                if (lightRay.sphereIntersection(sphere1) == false)
+                if (object.type == RTSphere.type)
                 {
-                    //print(lightRayDistance, p5.Vector.mult(green, myMap(lightRayDistance, 0, 10, 0, 255)))
+                    if (ray.sphereIntersection(object) == true) {
 
-                    color.add(p5.Vector.mult(gray, myMap(lightRayDistance*lightRayDistance*1.7, 0, 100, 255, 0)))
+                        let closestIntersectPoint = p5.Vector.mult(ray.direction, ray.length)
+
+                        let lightRayDirection = p5.Vector.sub(closestIntersectPoint, light.position)
+                        lightRayDirection.normalize()
+                        let distanceToIntersectPoint = p5.Vector.dist(light.position, closestIntersectPoint)
+                        let lightRay = new RTRay(light.position, lightRayDirection)
+
+                        if (lightRay.sphereIntersection(object) == true)
+                        {
+                            if (lightRay.length >= distanceToIntersectPoint - 0.00001 )
+                            {
+                                let intensity = light.brightness * 1 / ((lightRay.length * lightRay.length) + 1)
+                                color.add(p5.Vector.mult(gray, intensity))
+                            }
+                        }
+                    }
                 }
             }
 
@@ -107,110 +95,30 @@ function setup() {
 
     updatePixels();
 
+    print("Render - Done")
+
     //fpsCounter = new FPSCounter(10, 25, 20, 15)
 }
 
-function createScene() {
-    scene = createVector(0, 0, 0)
-    light = new RTLight(scene, createVector(-5, 0, 0), 2)
-    sphere1 = new RTSphere(scene, createVector(0, 0, 5), 2)
-}
-
-/*function draw() {
-    background(0)
-
-    if (keyIsDown(65)) {
-        rtCamera.position.add(createVector(-0.1, 0, 0));
-    } else if (keyIsDown(68)) {
-        rtCamera.position.add(createVector(0.1, 0, 0));
-    }
-    else if (keyIsDown(87)) {
-        rtCamera.position.add(createVector(0, 0, 0.1));
-    }
-    else if (keyIsDown(83)) {
-        rtCamera.position.add(createVector(0, 0, -0.1));
-    }
-    else if (keyIsDown(37)) {
-        rtCamera.direction.add(createVector(-0.1, 0, 0));
-    }
-    else if (keyIsDown(38)) {
-        rtCamera.direction.add(createVector(0, -0.1, 0));
-    }
-    else if (keyIsDown(39)) {
-        rtCamera.direction.add(createVector(0.1, 0, 0));
-    }
-    else if (keyIsDown(40)) {
-        rtCamera.direction.add(createVector(0, 0.1, 0));
-    }
-    else if (keyIsDown(72)) {
-        rtCamera.screenDistance -= 0.1
-    }
-    else if (keyIsDown(78)) {
-        rtCamera.screenDistance += 0.1
-    }
-
-    let screenCenter = p5.Vector.add(rtCamera.position, p5.Vector.mult(rtCamera.direction, rtCamera.screenDistance))
-    let leftTop = p5.Vector.add(screenCenter, createVector(-1, 1, 0))
-    let rightTop = p5.Vector.add(screenCenter, createVector(1, 1, 0))
-    let leftBot = p5.Vector.add(screenCenter, createVector(-1, -1, 0))
-    let rightBot = p5.Vector.add(screenCenter, createVector(1, -1, 0))
-
-    loadPixels();
-
-    for (let y = 0; y < HEIGHT; y = y + 1) {
-        for (let x = 0; x < WIDTH; x = x + 1) {
-            let u = x / WIDTH
-            let v = y / HEIGHT
-
-            let pointOnScreen = p5.Vector.add(leftBot, p5.Vector.add(p5.Vector.mult(p5.Vector.sub(rightBot, leftBot), u), p5.Vector.mult(p5.Vector.sub(leftTop, leftBot), v)))
-            let rayDirection = p5.Vector.sub(pointOnScreen, rtCamera.position)
-            rayDirection.normalize()
-            let ray = new RTRay(rtCamera.position, rayDirection, 15)
-
-            let color = createVector(0, 0, 0)
-
-            if (ray.sphereIntersection(sphere1) == true) {
-                color.add(red)
-            }
-
-            if (ray.sphereIntersection(sphere2) == true) {
-                color.add(green)
-            }
-
-            updatePixelAt(x, y, color.x, color.y, color.z)
-        }
-    }
-
-    updatePixels();
-
-    fpsCounter.show()
-}*/
-
-/*function keyPressed() {
-
-    if (keyCode === LEFT_ARROW) {
-        rtCamera.position.add(createVector(-1, 0, 0));
-    } else if (keyCode === RIGHT_ARROW) {
-        rtCamera.position.add(createVector(1, 0, 0));
-    }
-    else if (keyCode === UP_ARROW) {
-        rtCamera.position.add(createVector(0, 0, 1));
-    }
-    else if (keyCode === DOWN_ARROW) {
-        rtCamera.position.add(createVector(0, 0, -1));
-    }
-}*/
-
 function createCamera() {
-    print("Camera - init")
+    print("Camera - Init")
 
     let cameraPosition = createVector(0, 0, 0)
-    let cameraDirection = createVector(0, 0, 1)
-    let screenDistance = 1
+    let cameraRotation = createVector(0, 0, 1)
+    let screenDistance = 2
 
-    rtCamera = new RTCamera(cameraPosition, cameraDirection, screenDistance)
+    rtCamera = new RTCamera(scene, cameraPosition, cameraRotation, screenDistance)
 
-    print("Camera - created")
+    print("Camera - Created")
+}
+
+function createScene() {
+    print("Scene - Init")
+
+    light = new RTLight(null, createVector(5, 0, 0), createVector(0, 0, 1), 10000)
+    objects.push(new RTSphere(null, createVector(0, 0, 10), createVector(0, 0, 1), 3))
+
+    print("Scene - Created")
 }
 
 /**
@@ -236,16 +144,6 @@ function updatePixelAt(x = 0, y = 0, r = 0, g = 0, b = 0, a = 255) {
             pixels[index + 3] = a;
         }
     }
-}
-
-function myMap(value, min1, max1, min2, max2) {
-    if (value == null)
-    {
-        return 0
-    }
-
-    let perc = (value - min1) / (max1 - min1)
-    return perc * (max2 - min2) + min2
 }
 
 /**
